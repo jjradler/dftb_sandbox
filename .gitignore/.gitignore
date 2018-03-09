@@ -99,3 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# compiled python modules
+*.pyc
+
+# setuptools distribution folder
+/dist/
