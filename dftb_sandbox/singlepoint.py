@@ -11,40 +11,45 @@ Appended:   03/21/18
 __author__ = "Joseph J. Radler"
 
 import numpy as np
-import scipy as sp
+#import scipy as sp
 from sys import argv
 from numpy import linalg
-from .molecule import Atom
-from .molecule import AtomPair
-from .molecule import Molecule
-#from parseinput import parseatom
-#from parseinput import parse_atompair
-#from helpers import nearest_neighbors
 from buildsystem import make_atoms
 from buildsystem import make_atompairs
 from buildsystem import make_molecule
+from atomproperties import Atom
+from atompairproperties import AtomPair
+from moleculeproperties import Molecule
+
+class SinglePoint(object):
+    """SinglePoint parses and  runs a single-point calculation, calls functions
+    to create instances of atoms, atompairs, and molecules, and stores the
+    output to member objects.
+
+        Attributes:
+            atoms_list          (object list) all atoms in the system
+            atompairs_list      (object list) all atom pairs
+            molecule            (member object) molecular system containing
+                                    initial quantities for scc calculation
+            Fi_tot               (float array) 9M X 9M total Fock matrix for
+                                    M atoms containing initial values.
+            Fk_tot               (float array) 9M X 9M output Fock matrix after
+                                    SCC calculation to compute g.s. energy.
+            C_k                  (float array) 9M X 1 coefficient matrix for
+                                    Atomic Orbitals (AOs)
+            """
+
+    def __init__(self):
+        ## TODO: write parser that opens file
+        ## Initializations for the single point calculation go here
+
+        # instantiation statements
+        self.atoms_list = make_atoms()
+        self.atompairs_list = make_atompairs(atoms_list)
+        self.molecule = make_molecule(name = "H_2")
+
+#       def solve_KSeqns(self, molecule):
+#           """solve the KS equations for the SCC-solution for Fk_tot"""
+#            pass
 
 
-def __init__():
-    ## TODO: write parser that opens file
-    ## Initializations for the single point calculation go here
-    m_atoms = 2
-    #rx = None                   # list of x-coordinates
-    #ry = None                   # list of y-coordinates
-    rz = [0.375, -0.375]        # list of z-coordinates
-    u = [0.4195, 0.4195]        # list of Hubbard parameters
-    elements = ['H', 'H']       # list of elements
-
-    atoms_list = make_atoms(elements, rz)
-    #atompairs_list = buildmolecule.make_atompairs(atoms_list)
-    #molecule = make_molecule(atoms_list)
-
-
-def setE_rep():
-    # TODO: Use parsed input (.skf) for spline coefficients to compute
-    # repulsive energy (E_rep)
-    pass
-
-def totalEnergy():
-    # TODO: Include the eigenvalue matrix E and E_rep from parsed input
-    pass

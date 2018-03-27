@@ -6,7 +6,7 @@ __author__ = "Joseph J. Radler"
 #from sys import argv
 #import numpy as np
 #from numpy import linalg as lg
-from singlepoint import *
+from singlepoint import SinglePoint
 #from matbuild import *
 #from .dftbscc import *
 from .molecule import *
@@ -19,7 +19,7 @@ def dftb_run(self):
     # Currently the jobtype is hardcoded as ``singlepoint``
 
     if jobtype == "singlepoint":
-        JobOutput = None
+        JobOutput = SinglePoint(**kwargs)
         #TODO: rewrite singlepoint as SinglePoint class with the output values as member objects...
     else:
         return None

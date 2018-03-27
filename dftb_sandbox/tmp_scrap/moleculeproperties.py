@@ -1,4 +1,4 @@
-#molecule.py
+#moleculeproperties.py
 """
     atomSpec.py defines classes for:
         Atom objects that contain calculated molecular total energy
@@ -19,9 +19,6 @@ from numpy import sqrt as sqrt
 import scipy
 from scipy import special as sp
 from helpers import *
-#from scc import get_fock1
-#from parseinput import parse_atom
-#from parseinput import parse_atompair
 
 class Atom(object):
     """Contains atomic specifications and methods for calculating the total
@@ -49,7 +46,7 @@ class Atom(object):
         set_name()
     """
 
-    def __init__(self, element, tag, r, z = 1, l_max = 1) :
+    def __init__(self, element, tag, r, z = 1, Y_l) :
         """Instantiation of Atom class object."""
 
         ## The electrons can be set to a default from a __dict__ for the
@@ -62,7 +59,7 @@ class Atom(object):
         self.r = r                   # Instantiated in main module for each instance
         self.z = z                      # Hard-coded in for our H2 example.
         self.n_elec = None                 # Hardcoded for now...
-        self.l_max = None                 # Highest occ orbital corr. to s-type
+        self.Y_l = Y_l
         self.q_guess = None
         self.dq0_guess = None
         self.u = None         # Hubbard parameter for Hydrogen
@@ -123,12 +120,12 @@ class Molecule(object):
 
         self.ntot_elec = set_ntot_elec(self, atoms_list)
         self.mtot_atoms = len(atoms_list)
-        self.overlap = buildoverlap(atoms_list)
-        self.fock0_i = buildfock0_i(atoms_list)
-        self.fock1_i = buildfock1_i(atoms_list)
-        self.totalfock_i = buildtotalfock_i(self.fock0_i, self.fock1_i,\
+        self.overlap = buildmatrix.overlap(atoms_list)
+        self.fock0_i = buildmatrix.fock0(atoms_list)
+        self.fock1_i = buildmatrix.fock1(atoms_list)
+        self.totalfock_i = buildmatrix.totalfock_i(self.fock0_i, self.fock1_i,\
                 self.overlap)
-        self.c_vec = build_c_i(atoms_list)
+        self.c_vec = buildmatrix.c_vec_i(atoms_list)
 
 
 class AtomPair(object):
@@ -159,9 +156,6 @@ class AtomPair(object):
         set_gamma(pairtype, u_a, u_b, r_ab)
                                           Returns the A-B polarization
                                             interaction parameter gamma_ab
-        set_fock0_ab                      Returns the fock0 element for the pair
-        set_overlap_ab                    Returns the overlap elem for the pair
-        set_fock1_ab                      Returns the fock1 elem for the pair
     """
 
     def __init__(self, atom_a, atom_b):
@@ -180,9 +174,6 @@ class AtomPair(object):
         self.pair_bondtypes = None       # Set with an AtomPair method later
         self.pair_n_elecs = None
         self.gamma_ab = None            # Set with set_gamma() method
-        self.fock0_ab = None
-        self.fock1_ab = None
-        self.overlap_ab = None
 
         def set_pairname(self, atom_a, atom_b):
             """docstring"""
@@ -233,17 +224,15 @@ class AtomPair(object):
                 gamma_ab = u_a      # gamma_aa = u_a
             return gamma_ab
 
-        def set_fock0_ab(self, atom_a, atom_b):
-            """docstring"""
-            pass
-
-        def set_fock1_ab(self, atom_a, atom_b):
-            """docstring"""
-            pass
-
-        def set_overlap_ab(self, atom_a, atom_b):
-            """docstring"""
-            pass
+        def build_F0ab(self, atom_a, atom_b):
+            """constructs AB block of F_0"""
+            if atom_a is atom_b:
+                mu = 0
+                nu = 0
+                Yla = atom_a.Y_l
+                Ylb = atom_b.Y_l
+                for mu in enumerate(Yla):
+                    for nu in enumerate(Ylb):
 
         # Class instantiation value assignments
         self.u_a = atom_a.u
@@ -262,6 +251,6 @@ class AtomPair(object):
         self.pair_bondtypes = bond_types(self)
         self.pair_n_elecs = set_n_elecs(self, atom_a, atom_b)
         self.gamma_ab = set_gamma(self, self.pairtype, self.u_a, self.u_b, self.r_ab)
-        self.fock0_ab = set_fock0_ab(self, atom_a, atom_b)
-        self.fock1_ab = set_fock1_ab(self, atom_a, atom_b)
-        self.overlap_ab = set_overlap_ab(self, atom_a, atom_b)
+        self.F0ab_block = build_F0ab(self, atom_a, atom_b)
+        self.F1ab_block = build_F1ab(self, atom_a, atom_b)
+        self.overlap_block = build_Sab(self, atom_a, atom_b)

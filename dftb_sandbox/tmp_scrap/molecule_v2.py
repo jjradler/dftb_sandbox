@@ -1,4 +1,4 @@
-#molecule.py
+#moleculeproperties.py
 """
     atomSpec.py defines classes for:
         Atom objects that contain calculated molecular total energy
@@ -10,7 +10,7 @@
 
 """
 
-__AUTHOR__ = "Joseph J. Radler"
+__author__ = "Joseph J. Radler"
 
 import numpy as np
 from numpy import random as rand
@@ -19,9 +19,7 @@ from numpy import sqrt as sqrt
 import scipy
 from scipy import special as sp
 from helpers import *
-#from scc import get_fock1
-#from parseinput import parse_atom
-#from parseinput import parse_atompair
+from matrixbuilder import *
 
 class Atom(object):
     """Contains atomic specifications and methods for calculating the total
@@ -49,7 +47,7 @@ class Atom(object):
         set_name()
     """
 
-    def __init__(self, element, tag, r, z = 1, l_max = 1) :
+    def __init__(self, element, tag, r, z = 1, Y_l, e_ks):
         """Instantiation of Atom class object."""
 
         ## The electrons can be set to a default from a __dict__ for the
@@ -62,11 +60,12 @@ class Atom(object):
         self.r = r                   # Instantiated in main module for each instance
         self.z = z                      # Hard-coded in for our H2 example.
         self.n_elec = None                 # Hardcoded for now...
-        self.l_max = None                 # Highest occ orbital corr. to s-type
+        self.Y_l = Y_l                     # highest angular momentum
+        self.occ = None                    # list of occupied valence orbitals
         self.q_guess = None
         self.dq0_guess = None
         self.u = None         # Hubbard parameter for Hydrogen
-        self.e_ks = None      # Single atom, single particle KS energy (Hydrogen)
+        self.e_ks = []      # Single atom, single particle energies (Hydrogen)
 
 
     # Atom Object Class Methods
@@ -135,20 +134,27 @@ class AtomPair(object):
     """Contains atomic pairwise interaction parameters as member objects.
 
     Attributes:
-        name                (str)
-        atom_a              (object)
-        atom_b              (object)
-        u_a                 (float)
-        u_b                 (float)
-        r_a                 (array)
-        r_b                 (array)
-        r_ab                (float)
-        pairtype            (int)
-        sameatom            (bool)
-        pair_bondtypes      (int)
-        pair_n_elecs        (int)
-        d_ab                (float)
-        gamma_ab            (float)
+        name                    (str)
+        atom_a                  (object)
+        atom_b                  (object)
+        u_a                     (float)
+        u_b                     (float)
+        r_a                     (array)
+        r_b                     (array)
+        r_ab                    (float)
+        pairtype                (int)
+        sameatom                (bool)
+        pair_bondtypes          (int)
+        pair_n_elecs            (int)
+        d_ab                    (float)
+        gamma_ab                (float)
+        F0ab_block              (float array) 9 X 9 matrix of parsed F_0
+                                    parameters for AtomPair AB
+        F1ab_block              (float array) 9 X 9 matrix of calculated F_1 for
+                                    AtomPair AB
+        Sab_block               (float array) 9 X 9 matrix of AB overlap
+                                    parameters (parsed)
+
     Methods:
         set_pairname(atom_a, atom_b)      Returns member object.name
         set_n_elecs(atom_a, atom_b)       Returns number of valence electrons
@@ -177,6 +183,10 @@ class AtomPair(object):
         self.pair_bondtypes = None       # Set with an AtomPair method later
         self.pair_n_elecs = None
         self.gamma_ab = None            # Set with set_gamma() method
+        self.F0_params = np.zeros(9, dtype=float)      # parsed from skf
+        self.F0ab_block = np.zeros((9, 9), dtype=float)
+        self.F1ab_block = np.zeros((9, 9), dtype=float)
+        self.Sab_block = np.zeros((9, 9), dtype=float)
 
         def set_pairname(self, atom_a, atom_b):
             """docstring"""
@@ -198,7 +208,7 @@ class AtomPair(object):
         def pair_type(self, atom_a, atom_b):
             """determines type (same atom =0 ,homonuclear = 1, heteronuclear = 2)
             of pairwise interaction."""
-            if atom_a.name is not atom_b.name:
+            if atom_a is not atom_b:
                 if atom_a.element is not atom_b.element:
                     pairtype = 2
                 else:
@@ -212,7 +222,7 @@ class AtomPair(object):
             """determines the bond types (sigma = 0, pi = 1, delta = 2) from the
             l_max of each Atom object local copy."""
             # TODO: write appropriate set of conditionals to generalize
-            pair_bondtypes = 0
+
             return pair_bondtypes
 
         def set_gamma(self, pairtype, u_a, u_b, r_ab):
@@ -226,6 +236,38 @@ class AtomPair(object):
                 # Case where both electrons are on the same atom (atom A).
                 gamma_ab = u_a      # gamma_aa = u_a
             return gamma_ab
+
+        def build_F0ab(self, atom_a, atom_b):
+            """constructs AB block of F_0"""
+            mu = 0
+            nu = 0
+            Yla = atom_a.Y_l
+            Ylb = atom_b.Y_l
+            a_occ = atom_a.occ
+            b_occ = atom_b.occ
+            F0_params = self.F0_params           # parsed from pair SK file
+
+            if self.pair_type == 0:
+                # case of diagonal blocks where Atom A is Atom B
+                for mu in enumerate(a_occ):
+                    if mu < 1
+                        F0ab_block[mu, mu] = atom_a.e_ks[0]
+                    elif mu > 0 and mu < 5:
+                        F0ab_block[mu, mu] = atom_a.e_ks[1]
+                    elif mu > 4 and mu < len(Yla) + 1):
+                        F0ab_block[mu, mu] = atom_a.e_ks[2]
+                    else:
+                        break
+            elif self.pair_type == 1 or self.pair_type == 2:
+                for nu in enumerate(Yla):
+                    for mu in enumerate(Ylb):
+                        if mu < nu:
+                            # case of off-diagonal different atom terms
+
+
+
+
+
 
         # Class instantiation value assignments
         self.u_a = atom_a.u
@@ -243,4 +285,10 @@ class AtomPair(object):
 
         self.pair_bondtypes = bond_types(self)
         self.pair_n_elecs = set_n_elecs(self, atom_a, atom_b)
-        self.gamma_ab = set_gamma(self, self.pairtype, self.u_a, self.u_b, self.r_ab)
+        self.gamma_ab = set_gamma(self, self.pairtype, self.u_a, self.u_b,\
+                self.r_ab)
+        self.F0_params = np.array[-5.856202358804, 0.0, 0.0, 0.0, 0.0, 0.0,\
+                0.0, 0.0, 0.0, 0.0]
+        self.F0ab_block = build_F0ab(self, atom_a, atom_b)
+        self.F1ab_block = build_F1ab(self, atom_a, atom_b)
+        self.Sab_block = build_Sab(self, atom_a, atom_b)
