@@ -65,5 +65,5 @@ class Atom(object):
 
         # Run upon instance of Atom
         _set_name(self)
-        print "Atom name is %s\n" % self.name
+        print("Atom name is %s\n" % self.name)
         _set_dqguess(self)

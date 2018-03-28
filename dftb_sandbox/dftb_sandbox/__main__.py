@@ -19,7 +19,7 @@ def dftb_run():
     if jobtype == "singlepoint":
         output = SinglePoint()
         #TODO: rewrite singlepoint as SinglePoint class with the output values as member objects..
-        print "The atoms_list is %s" % output.atoms_list
-        print "The atompairs_list is %s " % output.atompairs_list
+        print("The atoms_list is %s" % output.atoms_list)
+        print("The atompairs_list is %s " % output.atompairs_list)
     else:
         sys.exit("This package does not yet have that functionality. Apologies.")
