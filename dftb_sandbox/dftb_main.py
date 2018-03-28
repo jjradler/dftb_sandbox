@@ -54,8 +54,6 @@ Class Atom(object):
         self.U              = None
         self.E_ks           = None
         self.Z_valence      = None
-    skfParse                          # call the parser for the appopriate .skf files
-
 
 Class AtomPair(object):
     """An AtomPair object contains parsed data from a nearest-neighbor pair of Atoms 
