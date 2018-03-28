@@ -10,16 +10,13 @@ Appended:   03/21/18
 """
 __author__ = "Joseph J. Radler"
 
-import numpy as np
+#import numpy as np
 #import scipy as sp
-from sys import argv
-from numpy import linalg
-from buildsystem import make_atoms
-from buildsystem import make_atompairs
-from buildsystem import make_molecule
-from atomproperties import Atom
-from atompairproperties import AtomPair
-from moleculeproperties import Molecule
+#from sys import argv
+#from numpy import linalg
+from .buildsystem import make_atoms
+from .buildsystem import make_atompairs
+#from .buildsystem import make_molecule
 
 class SinglePoint(object):
     """SinglePoint parses and  runs a single-point calculation, calls functions
@@ -31,11 +28,11 @@ class SinglePoint(object):
             atompairs_list      (object list) all atom pairs
             molecule            (member object) molecular system containing
                                     initial quantities for scc calculation
-            Fi_tot               (float array) 9M X 9M total Fock matrix for
+            focktot_0               (float array) 9M X 9M total Fock matrix for
                                     M atoms containing initial values.
-            Fk_tot               (float array) 9M X 9M output Fock matrix after
+            focktot_k               (float array) 9M X 9M output Fock matrix after
                                     SCC calculation to compute g.s. energy.
-            C_k                  (float array) 9M X 1 coefficient matrix for
+            cvector_k                  (float array) 9M X 1 coefficient matrix for
                                     Atomic Orbitals (AOs)
             """
 
@@ -44,12 +41,15 @@ class SinglePoint(object):
         ## Initializations for the single point calculation go here
 
         # instantiation statements
+        self.molname = "H_2"
         self.atoms_list = make_atoms()
-        self.atompairs_list = make_atompairs(atoms_list)
-        self.molecule = make_molecule(name = "H_2")
-
+        self.atompairs_list = make_atompairs(self.atoms_list)
+        #self.molecule = make_molecule(self.molname)
+        #test print statements
+        # TODO: set up appropriate block builder in matrixbuilder
+        self.focktot_0 = None   #computed from matrixbuilder
+        self.focktot_k = None   #computed from matrixbuilder
+        self.cvector_k = None   #computed from matrixbuilder
 #       def solve_KSeqns(self, molecule):
 #           """solve the KS equations for the SCC-solution for Fk_tot"""
 #            pass
-
-

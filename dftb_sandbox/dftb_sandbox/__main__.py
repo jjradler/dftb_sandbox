@@ -3,20 +3,23 @@
 
 __author__ = "Joseph J. Radler"
 
-#from sys import argv
+import sys
+from sys import argv
 #import numpy as np
 #from numpy import linalg as lg
-from singlepoint import SinglePoint
+from .singlepoint import SinglePoint
 
 
 
-def dftb_run(self):
+def dftb_run():
     """Main program for running a DFTB job in our ``toy implementation``"""
-    # TODO: determine jobtype
     # Currently the jobtype is hardcoded as ``singlepoint``
+    jobtype = argv[1]
 
     if jobtype == "singlepoint":
-        JobOutput = SinglePoint(**kwargs)
-        #TODO: rewrite singlepoint as SinglePoint class with the output values as member objects...
+        output = SinglePoint()
+        #TODO: rewrite singlepoint as SinglePoint class with the output values as member objects..
+        print "The atoms_list is %s" % output.atoms_list
+        print "The atompairs_list is %s " % output.atompairs_list
     else:
-        return None
+        sys.exit("This package does not yet have that functionality. Apologies.")
