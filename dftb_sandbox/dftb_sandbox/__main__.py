@@ -7,9 +7,6 @@ __author__ = "Joseph J. Radler"
 #import numpy as np
 #from numpy import linalg as lg
 from singlepoint import SinglePoint
-#from matbuild import *
-#from .dftbscc import *
-from .molecule import *
 
 
 

@@ -42,6 +42,9 @@ class AtomPair(object):
         set_gamma(pairtype, u_a, u_b, r_ab)
                                           Returns the A-B polarization
                                             interaction parameter gamma_ab
+        build_F0ab()
+        build_F1ab()
+        build_Sab()
     """
 
     def __init__(self, atom_a, atom_b):
@@ -58,15 +61,18 @@ class AtomPair(object):
         self.pair_n_elecs = None
         self.gamma_ab = None            # Set with set_gamma() method
 
+
         def set_pairname(self, atom_a, atom_b):
             """docstring"""
             name = atom_a.name + atom_b.tag
             return name
 
+
         def set_n_elecs(self, atom_a, atom_b):
             """docstring"""
             n_elecs = atom_a.n_elecs + atom_b.n_elecs
             return n_elecs
+
 
         def calc_r(self, atom_a, atom_b):
             """calculates the bond pair interatomic distance r_ab"""
@@ -74,6 +80,7 @@ class AtomPair(object):
             r_b = atom_b.r
             r_ab = lg.norm(r_a - r_b)
             return r_ab
+
 
         def pair_type(self, atom_a, atom_b):
             """determines type (same atom =0 ,homonuclear = 1,heteronuclear = 2)
@@ -88,12 +95,27 @@ class AtomPair(object):
 
             return pairtype
 
-        def bond_types(self):
+
+        def bond_types(self, atom_a, atom_b):
             """determines the bond types (sigma = 0, pi = 1, delta = 2) from the
-            l_max of each Atom object local copy."""
+            Lmax of each Atom object local copy."""
             # TODO: write appropriate set of conditionals to generalize
-            pair_bondtypes = 0
-            return pair_bondtypes
+            Lmax_a = atom_a.Lmax
+            Lmax_b = atom_b.Lmax
+
+            if Lmax_a == 0 and Lmax_b != 0 or Lmax_a != 0 and Lmax_b == 0:
+                bond_type = np.array(0)
+            elif Lmax_a == Lmax_b and Lmax_a != 0:
+                bond_type = np.range(Lmax_a)
+            elif Lmax_a != 0 and Lmax_a < Lmax_b:
+                bond_type = np.range(Lmax_a)
+            elif Lmax_b != 0 and Lmax_a > Lmax_b:
+                bond_type = np.range(Lmax_b)
+            else:
+                bond_type = np.array(0)   # default.
+
+            return bond_type
+
 
         def set_gamma(self, pairtype, u_a, u_b, r_ab):
             """sets the value of self.gamma_ab based on interaction type."""
@@ -107,25 +129,58 @@ class AtomPair(object):
                 gamma_ab = u_a      # gamma_aa = u_a
             return gamma_ab
 
-        def build_F0ab(self, atom_a, atom_b):
-            """constructs AB block of F_0"""
-            if atom_a is atom_b:
-                mu = 0
-                nu = 0
-                Lmax_a = atom_a.Lmax
-                Lmax_a = atom_b.Lmax
 
-                for mu in enumerate():
-                    for nu in enumerate(Ylb):
+        def build_F0ab(self, atom_a, atom_b):
+            """constructs AB block of F_0 from tabulated parameters"""
+            mu = 0
+            nu = 0
+            Lmax_a = atom_a.Lmax
+            Lmax_a = atom_b.Lmax
+            Fss0 = -5.8560358804    # Hartree, Fock ss-sigma, hardcoded for now
+            F0ab_params = np.zeros(10)
+            F0ab_params[0] = Fss0   # hardcoded for now
+            eks_a = atom_a.e_ks
+            eks_b = atom_b.e_k
+            F0ab_block = np.zeros((9, 9), dtype=float)
+
+            for mu in enumerate(F0ab_params):
+                # assume mu in atom_a
+                for nu in enumerate(F0ab_params):
+                    # assume nu in atom_b
+                    if atom_a is not atom_b and F0ab_params[nu] != 0:
+                        F0ab_block[mu, nu] = F0ab_params[nu]
+                        F0ab_block[nu, mu] = F0ab_params[nu]
+                    elif atom_a is not atom_b and F0ab_params[nu] == 0:
+                        pass
+                        #F0ab_block[mu, nu] = 0.00
+                        #F0ab_block[nu, mu] = 0.00
+                    elif atom_a is atom_b and self.bond_type == 0:
+                        # diagonal s-orbital KS energy
+                        F0ab_block[mu, nu] = eks_a[0]
+                    elif atom_a is atom_b and self.bond_type == 1:
+                        # diagonal p-orbital KS energy
+                        F0ab_block[mu, nu] = eks_a[1]
+                    elif atom_a is atom_b and self.bond_type == 2:
+                        # diagonal d-orbital KS energy
+                        F0ab_block[mu, nu] = eks_a[2]
+                    else:
+                        pass
+                        #F0ab_block[mu, nu] = 0.00
+
+            return F0ab_block
 
 
         def build_F1ab(self, atom_a, atom_b):
-            """docstring"""
-            return F1ab_block
+            """Constructs the F1ab matrix from parameters and r_ab"""
+            mu = 0
+            nu = 0
+            pass
+            #return F1ab_block
 
         def build_Sab(self, atom_a, atom_b):
-            """docstring"""
-            return Sab_block
+            """Constructs the overlap matrix from tabulated parameters"""
+            pass
+            #return Sab_block
 
         # Class instantiation value assignments
 
@@ -136,10 +191,11 @@ class AtomPair(object):
         self.name = set_pairname(self, atom_a, atom_b)
         self.r_ab = calc_r(self, atom_a.r, atom_b.r)
         self.pairtype = pair_type(self, atom_a, atom_b)
-        self.pair_bondtypes = bond_types(self)
+        self.bond_type = bond_types(self, atom_a, atom_b)
         self.pair_n_elecs = set_n_elecs(self, atom_a, atom_b)
         self.gamma_ab = set_gamma(self, self.pairtype, self.u_a, self.u_b,\
                 self.r_ab)
         self.F0ab_block = build_F0ab(self, atom_a, atom_b)
-        self.F1ab_block = build_F1ab(self, atom_a, atom_b)
-        self.Sab_block = build_Sab(self, atom_a, atom_b)
+        # TODO: write these methods too using the structure of build_F0ab
+        #self.F1ab_block = build_F1ab(self, atom_a, atom_b)
+        #self.Sab_block = build_Sab(self, atom_a, atom_b)
