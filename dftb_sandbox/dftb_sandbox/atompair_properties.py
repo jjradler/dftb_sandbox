@@ -11,8 +11,7 @@ from numpy import sqrt as sqrt
 #import scipy
 from scipy import special as sp
 #from .atom_properties import Atom
-#from matrixbuilder import *
-#from helpers import *
+from helpers import get_f1_mn
 
 class AtomPair(object):
     """Contains atomic pairwise interaction parameters as member objects.
@@ -49,9 +48,8 @@ class AtomPair(object):
 
     def __init__(self, atom_a, atom_b):
         """Instantiate and initialize (currently hardcoded) parameters"""
-        # TODO: place most of the methods into a "helper functions" module
-        # rather than listing them all here, then use them as calls to
-        # set the object values upon instantiation of molecule, not atompairs.
+        self.atom_a = atom_a
+        self.atom_b = atom_b
         self.name = None
         self._f_occ = [2.0, 0.0, 0.0]        # orbital populations {fs, fp, fd}
         self._u_a = atom_a.u_atom
@@ -70,6 +68,7 @@ class AtomPair(object):
         self._f0ab_params = np.zeros(10)
         self._f0ab_params[0] = self._fss0
 
+        # Private Methods
         def _set_pairname(self, atom_a, atom_b):
             """ Sets the pair name from the atom indices"""
             self.name = atom_a.name + atom_b.name
@@ -77,13 +76,6 @@ class AtomPair(object):
         def _set_n_elecs(self, atom_a, atom_b):
             """docstring"""
             self.n_elecs = atom_a.n_elecs + atom_b.n_elecs
-
-
-        def calc_r(self, atom_a, atom_b):
-            """calculates the bond pair interatomic distance r_ab"""
-            r_a = atom_a.r
-            r_b = atom_b.r
-            self.r_ab = lg.norm(r_a - r_b)
 
         def _pair_type(self, atom_a, atom_b):
             """determines type (same atom =0 ,homo_nuclear = 1,hetero_nuclear = 2)
@@ -113,7 +105,15 @@ class AtomPair(object):
             else:
                 self._bond_type = np.array(0)   # default.
 
-        def _set_gamma(self):
+
+        # Public Methods
+        def calc_r(self, atom_a, atom_b):
+            """calculates the bond pair interatomic distance r_ab"""
+            r_a = atom_a.r
+            r_b = atom_b.r
+            self.r_ab = lg.norm(r_a - r_b)
+
+        def set_gamma(self):
             """sets the value of self.gamma_ab based on interaction type."""
             uatom_a = self._uatom_a
             uatom_b = self._uatom_b
@@ -170,16 +170,19 @@ class AtomPair(object):
             _mu = 0
             _nu = 0
             f1ab_block = np.zeros((9, 9))
+
             for _nu in range(10):
                 for _mu in range(10):
                     if _mu <= _nu:
                         if atom_a is not atom_b and _mu < _nu:
-                            pass
-                            # TODO: add in the term to evaluate this element...
+                            f1_mn = get_f1_mn(atom_a, atom_b, self._gamma_ab)
+                            f1ab_block[_mu, _nu] = f1_mn
+                            f1ab_block[_nu, _mu] = f1_mn
                         elif atom_a is atom_b and _mu == _nu:
-                            f1ab_block[_mu, _nu] = 0.5 * self._uatom_a
+                            f1ab_block[_mu, _nu] = \
+                                    0.5 * self._uatom_a * atom_a.dq0_guess
                     else:
-                        pass
+                        break
 
             return f1ab_block
 
@@ -197,28 +200,28 @@ class AtomPair(object):
                         if atom_a is not atom_b:
                             sab_block[_mu, _nu] = self._sab_params[_nu]
                             sab_block[_nu, _mu] = self._sab_params[_nu]
-                        elif atom_a is not atom_b and self._sab_params[_nu] == 0:
-                            pass
+                        #elif atom_a is not atom_b and self._sab_params[_nu] == 0:
                             #sab_block[_mu, _nu] = 0.00
                             #sab_block[_nu, _mu] = 0.00
                         elif atom_a is atom_b and _mu == _nu:
                             sab_block[_mu, _nu] = 1.00
                         else:
-                            pass
+                            break
                             #sab_block[_mu, _nu] = 0.00
                     else:
-                        pass
+                        break
 
             return sab_block
 
         # Class instantiation value assignments
         _set_pairname(self, atom_a, atom_b)
-        # TODO:  move r_ab calculation to helpers.py
-        calc_r(self, atom_a, atom_b)
         _pair_type(self, atom_a, atom_b)
         _bond_types(self, atom_a, atom_b)
         _set_n_elecs(self, atom_a, atom_b)
-        _set_gamma(self)
+        calc_r(self, atom_a, atom_b)
+        set_gamma(self)
+
+        # Generate pairwise interaction matrix blocks
         self.f0ab_block = build_f0ab(self, atom_a, atom_b)
         self.f1ab_block = build_f1ab(self, atom_a, atom_b)
         self.sab_block = build_sab(self, atom_a, atom_b)

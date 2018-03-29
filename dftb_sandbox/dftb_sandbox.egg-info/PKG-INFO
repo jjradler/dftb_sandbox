@@ -1,0 +1,11 @@
+Metadata-Version: 1.0
+Name: dftb-sandbox
+Version: 0.1
+Summary: A simple implementation of SCC-DFTB
+Home-page: http://github.com/jjradler/dftb_sandbox
+Author: Joseph J. Radler
+Author-email: jjradler@uw.edu
+License: LGPL
+Description-Content-Type: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN

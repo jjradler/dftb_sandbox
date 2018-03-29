@@ -14,9 +14,9 @@ __author__ = "Joseph J. Radler"
 #import scipy as sp
 #from sys import argv
 #from numpy import linalg
-from .buildsystem import make_atoms
-from .buildsystem import make_atompairs
-#from .buildsystem import make_molecule
+from .build_system import make_atoms
+from .build_system import make_atompairs
+from .build_system import make_molecule
 
 class SinglePoint(object):
     """SinglePoint parses and  runs a single-point calculation, calls functions
@@ -24,32 +24,61 @@ class SinglePoint(object):
     output to member objects.
 
         Attributes:
-            atoms_list          (object list) all atoms in the system
-            atompairs_list      (object list) all atom pairs
-            molecule            (member object) molecular system containing
-                                    initial quantities for scc calculation
-            focktot_0               (float array) 9M X 9M total Fock matrix for
-                                    M atoms containing initial values.
-            focktot_k               (float array) 9M X 9M output Fock matrix after
-                                    SCC calculation to compute g.s. energy.
-            cvector_k                  (float array) 9M X 1 coefficient matrix for
-                                    Atomic Orbitals (AOs)
+            _molname        (string) name of the molecule under study
+            molecule_0      (member object) molecular system containing
+                                initial quantities for scc calculation
+            overlap         (float array) 9M X 9M total molecular ovelrap matrix
+            focktot_0       (float array) 9M X 9M total Fock matrix for
+                                M atoms containing initial values.
+            cvector_0       (float array) 9M X 1 initial TBO coeffs array
+            focktot_k       (float array) 9M X 9M output Fock matrix after
+                                SCC calculation to compute g.s. energy.
+            cvector_k       (float array) 9M X 1 coefficient matrix for
+                                total molecular wavefunctions
+            cvector_out     (float array) 9M X 1 coefficient array from KS eqns
+            eigenvalues     (float array) Sparse, diagonal 9M X 9M eigenval array
+            molecule_out    Class object containing output observables
+
+        Methods:
+            molecule_init() Instantiates Atom, AtomPair, and Molecule objects
+            scc_solver()    Solves the SCC problem to obtain focktot_out matrix
             """
 
     def __init__(self):
-        ## TODO: write parser that opens file
-        ## Initializations for the single point calculation go here
+        # write parser that opens file
+        # call parser in generalized build
+        self._molname = "H_2"
+        self.molecule_0 = None
+        self.overlap = None
+        self.focktot_0 = None
+        self.cvector_0 = None
+        self.focktot_k = None
+        self.cvector_k = None
+        self.cvector_out = None
+        self.focktot_out = None
+        self.molecule_out = None
+        self.eigenvalues_out = None
 
-        # instantiation statements
-        self.molname = "H_2"
-        self.atoms_list = make_atoms()
-        self.atompairs_list = make_atompairs(self.atoms_list)
-        #self.molecule = make_molecule(self.molname)
-        #test print statements
-        # TODO: set up appropriate block builder in matrixbuilder
-        self.focktot_0 = None   #computed from matrixbuilder
-        self.focktot_k = None   #computed from matrixbuilder
-        self.cvector_k = None   #computed from matrixbuilder
-#       def solve_KSeqns(self, molecule):
-#           """solve the KS equations for the SCC-solution for Fk_tot"""
-#            pass
+    def molecule_inst(self):
+        """initialize the atoms, pairs list, molecule, and molecule name"""
+        _molname = self._molname
+        _atoms_list = make_atoms()
+        _atompairs_list = make_atompairs(_atoms_list)
+        self.molecule_0 = make_molecule(_molname, _atompairs_list, _atoms_list)
+
+        # test print statements (remove before deployment)
+        print("Molecule_0's NAME is %s\n" % self.molecule_0.name)
+        print("Molecule_0 contains the atoms %s\n" % self.molecule_0.atoms_list)
+        print("Molecule_0 contains the pairs %s\n" % \
+                self.molecule_0.atompairs_list)
+        print("The overlap matrix for molecule_0 is %s\n" % \
+                self.molecule_0.overlap)
+
+    def scc_solver(self):
+        """solve the SCC iteratively to converge on the Fock matrix focktot_k"""
+        pass
+
+    def kohnsham_solver(self):
+        """Solve the Kohn-Sham equations for the converged Hamiltonian to output
+            the energy eigenvalues and density."""
+        pass

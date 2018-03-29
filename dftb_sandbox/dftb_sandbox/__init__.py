@@ -6,5 +6,6 @@ import dftb_sandbox.singlepoint
 import dftb_sandbox.atom_properties
 import dftb_sandbox.atompair_properties
 import dftb_sandbox.molecule_properties
-import dftb_sandbox.matrixbuilder
+import dftb_sandbox.build_matrix
+import dftb_sandbox.build_system
 import dftb_sandbox.helpers

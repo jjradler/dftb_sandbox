@@ -13,17 +13,8 @@
 __author__ = "Joseph J. Radler"
 
 import numpy as np
-#from numpy import linalg as lg
 from numpy import size as size
 from numpy import sqrt as sqrt
-#from matrixbuilder import buildfock0_i
-#from matrixbuilder import buildfock1_i
-#from matrixbuilder import buildfocktotal_i
-#from matrixbuilder import build_cvec
-#from .singlepoint import SinglePoint
-#from .atom_properties import Atom
-#from .atompair_properties import AtomPair
-#from helpers import *
 
 class Molecule(object):
     """Molecule objects contain information about the Atom objects and
@@ -31,17 +22,23 @@ class Molecule(object):
     initialize the self-consistent charge (SCC) calculation.
 
     Attributes:
+        atoms_list
+        atompairs_list
         name
-        atom
-        atompair
-        ntot_elec
-        mtot_atoms
-        ptot_pairs
-        c_vec
-        totalfock_i
-        fock0_i
-        fock1_i
+        _m_atoms
+        _n_electrons
+        _p_pairs
+        __rowcol_size
         overlap
+        fock0_0
+        fock1_0
+        focktot_0
+        cvector_0
+
+    Methods:
+        num_atoms()
+        num_electrons()
+        num_pairs()
     """
 
     def __init__(self, name, atoms_list, atompairs_list):
@@ -53,11 +50,12 @@ class Molecule(object):
         self._n_electrons = None
         self._p_pairs = None
         self.__rowcol_size = np.int(sqrt(size(atoms_list[0].sab_block)))
+        # TODO: Construct the matrices below with buildmatrix calls from singlepoint
         self.overlap = np.zeros((self.__rowcol_size, self.__rowcol_size))
-        self.fock0_i = np.zeros((self.__rowcol_size, self.__rowcol_size))
-        self.fock1_i = np.zeros((self.__rowcol_size, self.__rowcol_size))
-        self.focktot_i = np.zeros((self.__rowcol_size, self.__rowcol_size))
-        self.c_vec = np.ones(self.__rowcol_size)
+        self.fock0_0 = np.zeros((self.__rowcol_size, self.__rowcol_size))
+        self.fock1_0 = np.zeros((self.__rowcol_size, self.__rowcol_size))
+        self.focktot_0 = np.zeros((self.__rowcol_size, self.__rowcol_size))
+        self.cvector_0 = np.ones(self.__rowcol_size)
 
     def num_atoms(self):
         """computes the number of atoms in the molecule class object"""
@@ -78,16 +76,3 @@ class Molecule(object):
 
         for idx in enumerate(self.atompairs_list):
             self._p_pairs += self.atompairs_list[idx].n_elec
-
-    # Member instantiation statements
-    #num_atoms(self)
-    #num_electrons(self)
-    #num_pairs(self)
-    #self.ntot_elec = set_ntot_elec(self.atoms_list)
-    #self.mtot_atoms = len(self.atoms_list)
-    #self.S = buildoverlap(self.atoms_list)
-    #self.F0_i = buildfock0_i(self.atompairs_list)
-    #self.F1_i = buildfock1_i(self.atompairs_list)
-    #self.Ftot_i = buildtotalfock_i(self.F0_i, self.F1_i,\
-    #        self.S)
-    #self.c_vec = cvec_i(self.atoms_list)
